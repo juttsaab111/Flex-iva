@@ -169,8 +169,8 @@ def create_inline_buttons(otp_text: str, channel_link: str, chat_link: str):
         rows.append([Button.copy(f"COPY OTP: {otp_text}", copy_text=otp_text)])
     
     rows.append([
-        Button.url("CHANNEL", channel_link or "https://t.me"),
-        Button.url("CHAT", chat_link or "https://t.me"),
+        Button.url("CHANNEL", url=channel_link or "https://t.me"),
+        Button.url("CHAT", url=chat_link or "https://t.me"),
     ])
     return rows
 
@@ -264,22 +264,14 @@ async def run_flex_api_listener(config: dict):
                     if response.status == 200:
                         flex_connection_status[name] = "Active"
                         res_json = await response.json()
-                        
-                        # Handle different list keys returned by different flex panels
-                        data_list = []
-                        if isinstance(res_json, list):
-                            data_list = res_json
-                        elif isinstance(res_json, dict):
-                            data_list = res_json.get("data", res_json.get("messages", res_json.get("result", [])))
+                        data_list = res_json.get("data", [])
                         
                         if isinstance(data_list, list):
                             for item in data_list:
-                                if not isinstance(item, dict):
-                                    continue
-                                dt = item.get("dt", item.get("time", item.get("date", "")))
-                                num = item.get("num", item.get("recipient", item.get("number", "")))
-                                cli = item.get("cli", item.get("service", item.get("sender", "N/A")))
-                                full_msg = item.get("message", "") or item.get("msg", "") or item.get("text", "") or ""
+                                dt = item.get("dt", "")
+                                num = item.get("num", "")
+                                cli = item.get("cli", "N/A")
+                                full_msg = item.get("message", "") or ""
                                 
                                 unique_key = f"{dt}_{num}_{full_msg}"
                                 if unique_key in forwarded_flex_cache[name]:
