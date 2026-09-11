@@ -1,0 +1,6 @@
+telethon
+websockets
+phonenumbers
+aiohttp
+psutil
+flask
