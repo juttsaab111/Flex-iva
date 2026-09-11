@@ -264,14 +264,22 @@ async def run_flex_api_listener(config: dict):
                     if response.status == 200:
                         flex_connection_status[name] = "Active"
                         res_json = await response.json()
-                        data_list = res_json.get("data", [])
+                        
+                        # Handle different list keys returned by different flex panels
+                        data_list = []
+                        if isinstance(res_json, list):
+                            data_list = res_json
+                        elif isinstance(res_json, dict):
+                            data_list = res_json.get("data", res_json.get("messages", res_json.get("result", [])))
                         
                         if isinstance(data_list, list):
                             for item in data_list:
-                                dt = item.get("dt", "")
-                                num = item.get("num", "")
-                                cli = item.get("cli", "N/A")
-                                full_msg = item.get("message", "") or ""
+                                if not isinstance(item, dict):
+                                    continue
+                                dt = item.get("dt", item.get("time", item.get("date", "")))
+                                num = item.get("num", item.get("recipient", item.get("number", "")))
+                                cli = item.get("cli", item.get("service", item.get("sender", "N/A")))
+                                full_msg = item.get("message", "") or item.get("msg", "") or item.get("text", "") or ""
                                 
                                 unique_key = f"{dt}_{num}_{full_msg}"
                                 if unique_key in forwarded_flex_cache[name]:
