@@ -165,14 +165,16 @@ def format_phone_number(number: str, do_mask: bool) -> str:
 
 def create_inline_buttons(otp_text: str, channel_link: str, chat_link: str):
     rows = []
-    if otp_text and otp_text != "N/A":
-        rows.append([Button.copy(f"COPY OTP: {otp_text}", copy_text=otp_text)])
+    # Removed Button.copy to prevent attribute errors, using plain links/buttons instead
+    row_links = []
+    if channel_link:
+        row_links.append(Button.url("CHANNEL", channel_link))
+    if chat_link:
+        row_links.append(Button.url("CHAT", chat_link))
     
-    rows.append([
-        Button.url("CHANNEL", channel_link or "https://t.me"),
-        Button.url("CHAT", chat_link or "https://t.me"),
-    ])
-    return rows
+    if row_links:
+        rows.append(row_links)
+    return rows if rows else None
 
 async def send_ping(websocket, ping_interval, ping_msg="3"):
     while True:
