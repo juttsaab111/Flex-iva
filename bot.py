@@ -16,12 +16,6 @@ from keep import keep_alive
 keep_alive()
 
 from telethon import TelegramClient, events, Button
-from telethon.tl.types import (
-    ReplyInlineMarkup,
-    KeyboardButtonRow,
-    KeyboardButtonUrl,
-    KeyboardButtonCopy,
-)
 
 API_ID = 28822372
 API_HASH = "99978f7cdf7bed10f7f35b1a15d85908"
@@ -172,15 +166,13 @@ def format_phone_number(number: str, do_mask: bool) -> str:
 def create_inline_buttons(otp_text: str, channel_link: str, chat_link: str):
     rows = []
     if otp_text and otp_text != "N/A":
-        rows.append(KeyboardButtonRow(buttons=[
-            KeyboardButtonCopy(text=f"COPY OTP: {otp_text}", copy_text=otp_text)
-        ]))
+        rows.append([Button.copy(f"COPY OTP: {otp_text}", copy_text=otp_text)])
     
-    rows.append(KeyboardButtonRow(buttons=[
-        KeyboardButtonUrl(text="CHANNEL", url=channel_link or "https://t.me"),
-        KeyboardButtonUrl(text="CHAT", url=chat_link or "https://t.me"),
-    ]))
-    return ReplyInlineMarkup(rows=rows) if rows else None
+    rows.append([
+        Button.url("CHANNEL", channel_link or "https://t.me"),
+        Button.url("CHAT", chat_link or "https://t.me"),
+    ])
+    return rows
 
 async def send_ping(websocket, ping_interval, ping_msg="3"):
     while True:
@@ -272,14 +264,21 @@ async def run_flex_api_listener(config: dict):
                     if response.status == 200:
                         flex_connection_status[name] = "Active"
                         res_json = await response.json()
-                        data_list = res_json.get("data", [])
+                        
+                        data_list = []
+                        if isinstance(res_json, list):
+                            data_list = res_json
+                        elif isinstance(res_json, dict):
+                            data_list = res_json.get("data", res_json.get("messages", res_json.get("result", [])))
                         
                         if isinstance(data_list, list):
                             for item in data_list:
-                                dt = item.get("dt", "")
-                                num = item.get("num", "")
-                                cli = item.get("cli", "N/A")
-                                full_msg = item.get("message", "") or ""
+                                if not isinstance(item, dict):
+                                    continue
+                                dt = item.get("dt", item.get("time", item.get("date", "")))
+                                num = item.get("num", item.get("recipient", item.get("number", "")))
+                                cli = item.get("cli", item.get("service", item.get("sender", "N/A")))
+                                full_msg = item.get("message", "") or item.get("msg", "") or item.get("text", "") or ""
                                 
                                 unique_key = f"{dt}_{num}_{full_msg}"
                                 if unique_key in forwarded_flex_cache[name]:
