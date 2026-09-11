@@ -16,12 +16,6 @@ from keep import keep_alive
 keep_alive()
 
 from telethon import TelegramClient, events, Button
-from telethon.tl.types import (
-    ReplyInlineMarkup,
-    KeyboardButtonRow,
-    KeyboardButtonUrl,
-    KeyboardButtonCopy,
-)
 
 API_ID = 28822372
 API_HASH = "99978f7cdf7bed10f7f35b1a15d85908"
@@ -172,15 +166,13 @@ def format_phone_number(number: str, do_mask: bool) -> str:
 def create_inline_buttons(otp_text: str, channel_link: str, chat_link: str):
     rows = []
     if otp_text and otp_text != "N/A":
-        rows.append(KeyboardButtonRow(buttons=[
-            KeyboardButtonCopy(text=f"COPY OTP: {otp_text}", copy_text=otp_text)
-        ]))
+        rows.append([Button.copy(f"COPY OTP: {otp_text}", copy_text=otp_text)])
     
-    rows.append(KeyboardButtonRow(buttons=[
-        KeyboardButtonUrl(text="CHANNEL", url=channel_link or "https://t.me"),
-        KeyboardButtonUrl(text="CHAT", url=chat_link or "https://t.me"),
-    ]))
-    return ReplyInlineMarkup(rows=rows) if rows else None
+    rows.append([
+        Button.url("CHANNEL", channel_link or "https://t.me"),
+        Button.url("CHAT", chat_link or "https://t.me"),
+    ])
+    return rows
 
 async def send_ping(websocket, ping_interval, ping_msg="3"):
     while True:
