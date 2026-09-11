@@ -263,7 +263,14 @@ async def run_flex_api_listener(config: dict):
                 async with session.get(url, timeout=15) as response:
                     if response.status == 200:
                         flex_connection_status[name] = "Active"
-                        res_json = await response.json()
+                        try:
+                            res_json = await response.json(content_type=None)
+                        except Exception as json_err:
+                            text_resp = await response.text()
+                            print(f"Flex API [{name}] JSON decode error: {json_err} | Response text: {text_resp[:100]}")
+                            flex_connection_status[name] = "JSON Error"
+                            await asyncio.sleep(10)
+                            continue
                         
                         data_list = []
                         if isinstance(res_json, list):
@@ -312,7 +319,7 @@ async def run_flex_api_listener(config: dict):
                         flex_connection_status[name] = f"HTTP Error {response.status}"
         except Exception as e:
             flex_connection_status[name] = "Error"
-            print(f"Flex API error [{name}]: {e}")
+            print(f"Flex API connection error [{name}]: {e}")
         
         await asyncio.sleep(10)
 
