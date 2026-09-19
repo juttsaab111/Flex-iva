@@ -968,7 +968,7 @@ async def callback_query_handler(event):
             return
         buttons = [[Button.inline(f"Delete {s['name']}", data=f"saven1tel_del:{i}".encode())] for i, s in enumerate(saven1tel_config)]
         buttons.append([Button.inline("« Back", data=b"menu_saven1tel")])
-        await event.edit("Select API to delete:", buttons=buttons)
+        await event.edit("Select panel to delete:", buttons=buttons)
 
     elif data.startswith(b"saven1tel_del:"):
         idx = int(data.decode().split(":")[1])
