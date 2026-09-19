@@ -1,6 +1,7 @@
+requests
+aiohttp
 telethon
 websockets
+beautifulsoup4
 phonenumbers
-aiohttp
 psutil
-flask
